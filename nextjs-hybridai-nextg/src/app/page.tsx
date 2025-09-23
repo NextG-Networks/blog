@@ -7,8 +7,13 @@ import imageUrlBuilder from '@sanity/image-url';
 // Create the image URL builder
 const builder = imageUrlBuilder(client);
 
-export function urlFor(source: any) {
+export function urlFor(source: Parameters<typeof builder.image>[0]) {
   return builder.image(source);
+}
+
+interface Category {
+  title: string;
+  description?: string;
 }
 
 // Updated query to include all the fields we need for the design
@@ -115,7 +120,7 @@ function ArticleCard({ post }: { post: SanityDocument }) {
           {/* Categories */}
           {post.categories && post.categories.length > 0 && (
             <div className="flex gap-3 flex-wrap">
-              {post.categories.map((category: any, index: number) => (
+              {post.categories.map((category: Category, index: number) => (
                 <span
                   key={index}
                   className="text-xs font-medium uppercase tracking-wide text-emerald-500 sm:text-sm"

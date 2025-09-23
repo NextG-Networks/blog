@@ -9,8 +9,22 @@ import imageUrlBuilder from '@sanity/image-url';
 // Create the image URL builder
 const builder = imageUrlBuilder(client);
 
-export function urlFor(source: any) {
+export function urlFor(source: Parameters<typeof builder.image>[0]) {
   return builder.image(source);
+}
+
+interface Category {
+  title: string;
+  description?: string;
+}
+
+interface Author {
+  name: string;
+  image?: {
+    asset: {
+      url: string;
+    };
+  };
 }
 
 const POST_QUERY = `*[
@@ -106,7 +120,7 @@ export default async function BlogPost({
             {/* Categories */}
             {post.categories && post.categories.length > 0 && (
               <div className="flex gap-2 mb-8">
-                {post.categories.map((category: any, index: number) => (
+                {post.categories.map((category: Category, index: number) => (
                   <span
                     key={index}
                     className="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm font-medium rounded-full"
