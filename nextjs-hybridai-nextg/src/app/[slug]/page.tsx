@@ -169,16 +169,16 @@ export default async function BlogPost({
                   ),
                 },
                 marks: {
-                  link: ({ children, value }) => (
-                    <a
-                      href={value.href}
-                      target={value.href.startsWith('http') ? '_blank' : undefined}
-                      rel={value.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                      className="text-emerald-600 hover:text-emerald-700 hover:underline"
-                    >
-                      {children}
-                    </a>
-                  ),
+                link: ({ children, value }) => (
+                  <a
+                    href={value.href || '#'}
+                    target={value.href?.startsWith('http') ? '_blank' : undefined}
+                    rel={value.href?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    className="text-emerald-600 hover:text-emerald-700 hover:underline"
+                  >
+                    {children}
+                  </a>
+                ),
                 },
                 block: {
                   h2: ({ children }) => (
