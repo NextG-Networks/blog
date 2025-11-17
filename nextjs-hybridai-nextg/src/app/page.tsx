@@ -16,8 +16,7 @@ export default function Home() {
         navItems={[
           { label: 'Documentation', href: '/documentation' },
           { label: 'Blog', href: '/blog' },
-          { label: 'Publications', href: '#' },
-          { label: 'Team', href: '#' },
+          { label: 'Team', href: '/team' },
         ]}
       />
       
