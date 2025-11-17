@@ -18,15 +18,6 @@ interface Category {
   description?: string;
 }
 
-interface Author {
-  name: string;
-  image?: {
-    asset: {
-      url: string;
-    };
-  };
-}
-
 const POST_QUERY = `*[
   _type == "post" 
   && slug.current == $slug

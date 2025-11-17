@@ -227,8 +227,8 @@ export async function generateStaticParams() {
     }`
   );
 
-  return sections.flatMap((section: any) =>
-    (section.topics || []).map((topic: any) => ({
+  return sections.flatMap((section: { slug: string; topics?: Array<{ slug: string }> }) =>
+    (section.topics || []).map((topic: { slug: string }) => ({
       section: section.slug,
       topic: topic.slug,
     }))

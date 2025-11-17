@@ -20,6 +20,7 @@ export interface Topic {
   title: string;
   slug: string;
   content?: PortableTextBlock[]; // PortableText content from Sanity
+  brief?: string;
   duration?: string;
   videoUrl?: string;
   image?: string;
