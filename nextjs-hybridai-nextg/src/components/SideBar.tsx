@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { documentationContent, type Topic } from '@/lib/content';
 
 interface Section {
   title: string;
@@ -12,12 +11,14 @@ interface Section {
 
 interface SectionWithRouting extends Section {
   sectionSlug: string;
-  topicsData: Topic[];
+  topicsData: Array<{
+    slug: string;
+    title: string;
+  }>;
 }
 
 interface SidebarProps {
   sections?: Section[];
-  useContentStructure?: boolean; // If true, use documentationContent from lib/content.ts
 }
 
 const defaultSections: Section[] = [
@@ -55,25 +56,17 @@ const defaultSections: Section[] = [
 
 export default function Sidebar({
   sections: customSections,
-  useContentStructure = false,
 }: SidebarProps) {
   const pathname = usePathname();
   const [expandedSections, setExpandedSections] = useState<Set<number>>(
     new Set([0, 1, 2]) // All sections expanded by default
   );
-
-  // Always use content structure if we're on a documentation page, otherwise use custom sections
+  // Check if we're on a documentation page
   const isDocumentationPage = pathname?.startsWith('/documentation');
-  const shouldUseContentStructure = useContentStructure || isDocumentationPage;
 
-  const sections = shouldUseContentStructure
-    ? documentationContent.sections.map((section) => ({
-        title: section.title,
-        topics: section.topics.map((topic) => topic.title),
-        sectionSlug: section.slug,
-        topicsData: section.topics,
-      }))
-    : customSections || defaultSections;
+  // Use custom sections if provided, otherwise use default sections
+  // Note: For documentation pages, sections should be passed as props from the server component
+  const sections: (Section | SectionWithRouting)[] = customSections || defaultSections;
 
   const toggleSection = (index: number) => {
     const newExpanded = new Set(expandedSections);
@@ -90,11 +83,11 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="w-64 border-r h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 scrollbar-hide">
+    <aside className="w-64 border-r h-full overflow-y-auto bg-gray-50 dark:bg-[#121212] border-gray-200 dark:border-[#444444] scrollbar-hide">
       <div className="p-4">
         {/* Icon at the top */}
         <div className="mb-6">
-          <div className="w-5 h-5 rounded-sm mb-4 bg-gray-300 dark:bg-gray-700"></div>
+          <div className="w-5 h-5 rounded-sm mb-4 bg-gray-300 dark:bg-[#444444]"></div>
         </div>
 
         {/* Documentation sections */}
@@ -111,7 +104,7 @@ export default function Sidebar({
                   onClick={() => toggleSection(sectionIndex)}
                   className="w-full text-left mb-2 group"
                 >
-                  <h2 className="font-bold text-sm leading-tight transition-colors text-gray-900 dark:text-white group-hover:opacity-70">
+                  <h2 className="font-bold text-sm leading-tight transition-colors text-gray-900 dark:text-[#E0E0E0] group-hover:opacity-70">
                     {section.title}
                   </h2>
                 </button>
@@ -119,9 +112,9 @@ export default function Sidebar({
                 {expandedSections.has(sectionIndex) && (
                   <ul className="space-y-1 ml-0 mt-2">
                     {section.topics.map((topic, topicIndex) => {
-                      // If using content structure, create proper links
+                      // If section has routing info (from Sanity), create proper links
                       if (
-                        shouldUseContentStructure &&
+                        isDocumentationPage &&
                         sectionWithRouting &&
                         sectionWithRouting.topicsData[topicIndex]
                       ) {
@@ -138,8 +131,8 @@ export default function Sidebar({
                               href={`/documentation/${sectionWithRouting.sectionSlug}/${topicData.slug}`}
                               className={`block py-1.5 pl-4 text-sm transition-colors ${
                                 isActive
-                                  ? 'text-gray-900 dark:text-white font-medium bg-gray-100 dark:bg-gray-800'
-                                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+                                  ? 'text-gray-900 dark:text-[#E0E0E0] font-medium bg-gray-100 dark:bg-[#1a1a1a]'
+                                  : 'text-gray-600 dark:text-[#B0B0B0] hover:text-gray-900 dark:hover:text-[#E0E0E0]'
                               }`}
                             >
                               {topic}
@@ -153,7 +146,7 @@ export default function Sidebar({
                         <li key={topicIndex}>
                           <a
                             href="#"
-                            className="block py-1.5 pl-4 text-sm transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+                            className="block py-1.5 pl-4 text-sm transition-colors text-gray-600 dark:text-[#B0B0B0] hover:text-gray-900 dark:hover:text-[#E0E0E0]"
                           >
                             {topic}
                           </a>

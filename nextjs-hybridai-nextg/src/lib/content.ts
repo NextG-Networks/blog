@@ -1,23 +1,28 @@
-// Content structure for documentation topics
-import {
-  landscapeOfChoice,
-  paradoxOfAgency,
-  liberationFromRegret,
-  mappingCausalFactors,
-  reframingUncertainty,
-  adaptingToChange,
-} from '@/content/topics';
+// Content structure for documentation topics - now using Sanity CMS
+import { client } from '@/sanity/client';
+import { type SanityDocument } from 'next-sanity';
+import imageUrlBuilder from '@sanity/image-url';
+
+const builder = imageUrlBuilder(client);
+
+export function urlFor(source: Parameters<typeof builder.image>[0]) {
+  return builder.image(source);
+}
 
 export interface Topic {
   id: string;
   title: string;
   slug: string;
-  content?: string; // Can be markdown, HTML, or reference to CMS
-  duration?: string; // e.g., "14:36"
+  content?: any; // PortableText content from Sanity
+  duration?: string;
   videoUrl?: string;
-  image?: string; // Hero image URL
-  imageAlt?: string; // Alt text for hero image
+  image?: string;
+  imageAlt?: string;
   order: number;
+  section?: {
+    slug: string;
+    title: string;
+  };
 }
 
 export interface Section {
@@ -26,6 +31,7 @@ export interface Section {
   slug: string;
   topics: Topic[];
   order: number;
+  description?: string;
 }
 
 export interface Documentation {
@@ -38,136 +44,209 @@ export interface Documentation {
   duration: string;
 }
 
-// Documentation data structure
-export const documentationContent: Documentation = {
-  id: 'research-documentation',
-  title: 'Research Documentation',
-  description:
-    'Comprehensive documentation of our O-RAN AI research project, including methodologies, findings, and technical details.',
-  modules: 4,
-  lessons: 20,
-  duration: '3 hr 43 min',
-  sections: [
-    {
-      id: 'orientation',
-      title: 'Orientation: Understanding Where You Are',
-      slug: 'orientation',
-      order: 1,
-      topics: [
-        landscapeOfChoice,
-        paradoxOfAgency,
-        liberationFromRegret,
-        {
-          id: 'recognizing-patterns',
-          title: 'Recognizing Patterns',
-          slug: 'recognizing-patterns',
-          duration: '18:10',
-          order: 4,
-        },
-        {
-          id: 'values-and-goals',
-          title: 'Values and Goals',
-          slug: 'values-and-goals',
-          duration: '16:30',
-          order: 5,
-        },
-      ],
-    },
-    {
-      id: 'direction',
-      title: 'Direction: Choosing a Path',
-      slug: 'direction',
-      order: 2,
-      topics: [
-        mappingCausalFactors,
-        reframingUncertainty,
-        {
-          id: 'overcoming-paralysis',
-          title: 'Overcoming Decision Paralysis',
-          slug: 'overcoming-paralysis',
-          duration: '17:15',
-          order: 3,
-        },
-        {
-          id: 'path-of-least-resistance',
-          title: 'Perceiving the Path of Least Resistance',
-          slug: 'path-of-least-resistance',
-          duration: '15:40',
-          order: 4,
-        },
-        {
-          id: 'surrendering-outcome',
-          title: 'Surrendering to the Outcome',
-          slug: 'surrendering-outcome',
-          duration: '16:55',
-          order: 5,
-        },
-      ],
-    },
-    {
-      id: 'navigation',
-      title: 'Navigation: Steering Through the Inevitable',
-      slug: 'navigation',
-      order: 3,
-      topics: [
-        adaptingToChange,
-        {
-          id: 'maintaining-momentum',
-          title: 'Maintaining Momentum',
-          slug: 'maintaining-momentum',
-          duration: '13:45',
-          order: 2,
-        },
-        {
-          id: 'course-corrections',
-          title: 'Corrections & Adjustments',
-          slug: 'course-corrections',
-          duration: '15:10',
-          order: 3,
-        },
-        {
-          id: 'measuring-progress',
-          title: 'Measuring Progress',
-          slug: 'measuring-progress',
-          duration: '12:30',
-          order: 4,
-        },
-        {
-          id: 'staying-aligned',
-          title: 'Staying Aligned',
-          slug: 'staying-aligned',
-          duration: '16:00',
-          order: 5,
-        },
-      ],
-    },
-  ],
-};
+const options = { next: { revalidate: 30 } };
 
-// Helper functions
-export function getTopicBySlug(
+// Fetch all sections from Sanity
+export async function getSections(): Promise<Section[]> {
+  const sections = await client.fetch<SanityDocument[]>(
+    `*[_type == "documentationSection"] | order(order asc) {
+      _id,
+      title,
+      "slug": slug.current,
+      description,
+      order,
+      "topics": topics[]-> {
+        _id,
+        title,
+        "slug": slug.current,
+        order,
+        brief,
+        duration,
+        videoUrl,
+        heroImage {
+          asset-> {
+            _id,
+            url
+          },
+          alt
+        },
+        "imageAlt": heroImage.alt,
+        content,
+        "section": section-> {
+          "slug": slug.current,
+          title
+        }
+      } | order(order asc)
+    }`,
+    {},
+    options
+  );
+
+  return sections.map((section) => ({
+    id: section._id,
+    title: section.title,
+    slug: section.slug,
+    description: section.description,
+    order: section.order,
+    topics: (section.topics || []).map((topic: any) => ({
+      id: topic._id,
+      title: topic.title,
+      slug: topic.slug,
+      content: topic.content,
+      duration: topic.duration,
+      videoUrl: topic.videoUrl,
+      image: topic.heroImage?.asset?.url
+        ? urlFor(topic.heroImage).width(1200).height(600).url()
+        : undefined,
+      imageAlt: topic.imageAlt || topic.heroImage?.alt,
+      order: topic.order,
+      section: topic.section,
+    })),
+  }));
+}
+
+// Get documentation content structure
+export async function getDocumentationContent(): Promise<Documentation> {
+  const sections = await getSections();
+  const totalTopics = sections.reduce((sum, section) => sum + section.topics.length, 0);
+
+  return {
+    id: 'research-documentation',
+    title: 'Research Documentation',
+    description:
+      'Comprehensive documentation of our O-RAN AI research project, including methodologies, findings, and technical details.',
+    modules: sections.length,
+    lessons: totalTopics,
+    duration: 'Ongoing',
+    sections,
+  };
+}
+
+// Get a single topic by section and topic slugs
+export async function getTopicBySlug(
   sectionSlug: string,
   topicSlug: string
-): Topic | undefined {
-  const section = documentationContent.sections.find((s) => s.slug === sectionSlug);
-  return section?.topics.find((t) => t.slug === topicSlug);
+): Promise<Topic | undefined> {
+  const topic = await client.fetch<SanityDocument>(
+    `*[_type == "documentationTopic" && slug.current == $topicSlug && section->slug.current == $sectionSlug][0] {
+      _id,
+      title,
+      "slug": slug.current,
+      order,
+      brief,
+      duration,
+      videoUrl,
+      heroImage {
+        asset-> {
+          _id,
+          url
+        },
+        alt
+      },
+      "imageAlt": heroImage.alt,
+      content,
+      "section": section-> {
+        "slug": slug.current,
+        title
+      }
+    }`,
+    { sectionSlug, topicSlug },
+    options
+  );
+
+  if (!topic) return undefined;
+
+  return {
+    id: topic._id,
+    title: topic.title,
+    slug: topic.slug,
+    content: topic.content,
+    duration: topic.duration,
+    videoUrl: topic.videoUrl,
+    image: topic.heroImage?.asset?.url
+      ? urlFor(topic.heroImage).width(1200).height(600).url()
+      : undefined,
+    imageAlt: topic.imageAlt || topic.heroImage?.alt,
+    order: topic.order,
+    section: topic.section,
+  };
 }
 
-export function getSectionBySlug(slug: string): Section | undefined {
-  return documentationContent.sections.find((s) => s.slug === slug);
+// Get a single section by slug
+export async function getSectionBySlug(slug: string): Promise<Section | undefined> {
+  const section = await client.fetch<SanityDocument>(
+    `*[_type == "documentationSection" && slug.current == $slug][0] {
+      _id,
+      title,
+      "slug": slug.current,
+      description,
+      order,
+      "topics": topics[]-> {
+        _id,
+        title,
+        "slug": slug.current,
+        order,
+        brief,
+        duration,
+        videoUrl,
+        heroImage {
+          asset-> {
+            _id,
+            url
+          },
+          alt
+        },
+        "imageAlt": heroImage.alt,
+        content,
+        "section": section-> {
+          "slug": slug.current,
+          title
+        }
+      } | order(order asc)
+    }`,
+    { slug },
+    options
+  );
+
+  if (!section) return undefined;
+
+  return {
+    id: section._id,
+    title: section.title,
+    slug: section.slug,
+    description: section.description,
+    order: section.order,
+    topics: (section.topics || []).map((topic: any) => ({
+      id: topic._id,
+      title: topic.title,
+      slug: topic.slug,
+      content: topic.content,
+      duration: topic.duration,
+      videoUrl: topic.videoUrl,
+      image: topic.heroImage?.asset?.url
+        ? urlFor(topic.heroImage).width(1200).height(600).url()
+        : undefined,
+      imageAlt: topic.imageAlt || topic.heroImage?.alt,
+      order: topic.order,
+      section: topic.section,
+    })),
+  };
 }
 
-export function getAllTopics(): Array<{ section: Section; topic: Topic }> {
-  return documentationContent.sections.flatMap((section) =>
+// Get all topics across all sections
+export async function getAllTopics(): Promise<Array<{ section: Section; topic: Topic }>> {
+  const sections = await getSections();
+  return sections.flatMap((section) =>
     section.topics.map((topic) => ({ section, topic }))
   );
 }
 
-export function getNextTopic(
+// Get next topic
+export async function getNextTopic(
   sectionSlug: string,
   topicSlug: string
-): { section: Section; topic: Topic } | null {
-  const allTopics = getAllTopics();
+): Promise<{ section: Section; topic: Topic } | null> {
+  const allTopics = await getAllTopics();
   const currentIndex = allTopics.findIndex(
     (item) =>
       item.section.slug === sectionSlug && item.topic.slug === topicSlug
@@ -179,11 +258,12 @@ export function getNextTopic(
   return null;
 }
 
-export function getPreviousTopic(
+// Get previous topic
+export async function getPreviousTopic(
   sectionSlug: string,
   topicSlug: string
-): { section: Section; topic: Topic } | null {
-  const allTopics = getAllTopics();
+): Promise<{ section: Section; topic: Topic } | null> {
+  const allTopics = await getAllTopics();
   const currentIndex = allTopics.findIndex(
     (item) =>
       item.section.slug === sectionSlug && item.topic.slug === topicSlug
@@ -195,3 +275,14 @@ export function getPreviousTopic(
   return null;
 }
 
+// Legacy export for backwards compatibility (will be removed once fully migrated)
+export const documentationContent = {
+  id: 'research-documentation',
+  title: 'Research Documentation',
+  description:
+    'Comprehensive documentation of our O-RAN AI research project, including methodologies, findings, and technical details.',
+  modules: 4,
+  lessons: 16,
+  duration: 'Ongoing',
+  sections: [],
+};

@@ -51,23 +51,23 @@ export default function HeroSection() {
             </div>
           </div>
           <div className="mt-12 flex items-center justify-center gap-12 flex-wrap">
-            <div className="p-4 grayscale transition duration-200 hover:grayscale-0 flex items-center justify-center">
+            <div className="p-4 grayscale dark:grayscale-0 dark:brightness-0 dark:invert transition duration-200 hover:grayscale-0 flex items-center justify-center">
               <Image
                 src="https://upload.wikimedia.org/wikipedia/commons/f/f7/Lule%C3%A5_tekniska_universitet_Logo.svg"
                 alt="Luleå University of Technology Logo"
                 width={200}
                 height={100}
-                className="h-16 md:h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
+                className="h-16 md:h-20 w-auto object-contain opacity-70 dark:opacity-100 hover:opacity-100 transition-opacity"
                 unoptimized
               />
             </div>
-            <div className="p-4 grayscale transition duration-200 hover:grayscale-0 flex items-center justify-center">
+            <div className="p-4 grayscale dark:grayscale-0 dark:brightness-0 dark:invert transition duration-200 hover:grayscale-0 flex items-center justify-center">
               <Image
                 src="https://upload.wikimedia.org/wikipedia/commons/e/e9/Ericsson_logo.svg"
                 alt="Ericsson Logo"
                 width={200}
                 height={100}
-                className="h-16 md:h-20 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
+                className="h-16 md:h-20 w-auto object-contain opacity-70 dark:opacity-100 hover:opacity-100 transition-opacity"
                 unoptimized
               />
             </div>

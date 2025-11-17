@@ -1,14 +1,21 @@
 import PageLayout from '@/components/PageLayout';
-import { documentationContent } from '@/lib/content';
+import { getDocumentationContent } from '@/lib/content';
 import Link from 'next/link';
 
-export default function DocumentationOverviewPage() {
+export default async function DocumentationOverviewPage() {
+  const documentationContent = await getDocumentationContent();
+
   return (
     <PageLayout
       breadcrumb={`${documentationContent.title} / Overview`}
       sidebarSections={documentationContent.sections.map((s) => ({
         title: s.title,
         topics: s.topics.map((t) => t.title),
+        sectionSlug: s.slug,
+        topicsData: s.topics.map((t) => ({
+          slug: t.slug,
+          title: t.title,
+        })),
       }))}
     >
       <div className="max-w-4xl">
@@ -61,25 +68,32 @@ export default function DocumentationOverviewPage() {
             Explore the topics in the sidebar to dive deeper into specific areas of our work.
           </p>
 
-          <div className="grid md:grid-cols-2 gap-4 mt-8">
-            {documentationContent.sections.map((section) => (
-              <Link
-                key={section.id}
-                href={`/documentation/${section.slug}/${section.topics[0]?.slug || ''}`}
-                className="p-6 border rounded-lg transition-colors border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 group"
-              >
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                  {section.title}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {section.topics.length} topics
-                </p>
-              </Link>
-            ))}
-          </div>
+          {documentationContent.sections.length > 0 ? (
+            <div className="grid md:grid-cols-2 gap-4 mt-8">
+              {documentationContent.sections.map((section) => (
+                <Link
+                  key={section.id}
+                  href={`/documentation/${section.slug}/${section.topics[0]?.slug || ''}`}
+                  className="p-6 border rounded-lg transition-colors border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 group"
+                >
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {section.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {section.topics.length} {section.topics.length === 1 ? 'topic' : 'topics'}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-8 p-6 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900">
+              <p className="text-gray-600 dark:text-gray-400">
+                No documentation sections found. Please add sections and topics in Sanity Studio.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </PageLayout>
   );
 }
-

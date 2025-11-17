@@ -9,6 +9,8 @@ interface PageLayoutProps {
   sidebarSections?: Array<{
     title: string;
     topics: string[];
+    sectionSlug?: string;
+    topicsData?: Array<{ slug: string; title: string }>;
   }>;
   breadcrumb?: string;
   navItems?: Array<{ label: string; href: string; hasDropdown?: boolean }>;
@@ -21,7 +23,7 @@ export default function PageLayout({
   navItems,
 }: PageLayoutProps) {
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-gray-800">
+    <div className="flex flex-col h-screen bg-white dark:bg-[#1a1a1a]">
       {/* Navbar */}
       <Navbar breadcrumb={breadcrumb} navItems={navItems} />
 
@@ -30,11 +32,10 @@ export default function PageLayout({
         {/* Sidebar */}
         <Sidebar
           sections={sidebarSections}
-          useContentStructure={!sidebarSections}
         />
 
         {/* Main content container */}
-        <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-800">
+        <main className="flex-1 overflow-y-auto bg-white dark:bg-[#1a1a1a]">
           <div className="p-6">{children}</div>
         </main>
       </div>

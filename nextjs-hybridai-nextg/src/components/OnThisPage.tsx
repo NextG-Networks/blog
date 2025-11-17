@@ -79,9 +79,9 @@ export default function OnThisPage({ contentId = 'topic-content' }: OnThisPagePr
   };
 
   return (
-    <aside className="w-64 h-full overflow-y-auto sticky top-0 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-l border-gray-200 dark:border-gray-800">
+    <aside className="w-64 h-full overflow-y-auto sticky top-0 bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-[#E0E0E0] border-l border-gray-200 dark:border-[#444444]">
       <div className="p-6">
-        <h2 className="font-bold mb-4 text-sm text-gray-900 dark:text-white">
+        <h2 className="font-bold mb-4 text-sm text-gray-900 dark:text-[#E0E0E0]">
           On this page
         </h2>
         <nav className="space-y-1">
@@ -97,8 +97,8 @@ export default function OnThisPage({ contentId = 'topic-content' }: OnThisPagePr
                 heading.level === 3 ? 'pl-4' : ''
               } ${
                 activeId === heading.id
-                  ? 'text-gray-900 dark:text-white font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+                  ? 'text-gray-900 dark:text-[#E0E0E0] font-medium'
+                  : 'text-gray-600 dark:text-[#B0B0B0] hover:text-gray-900 dark:hover:text-[#E0E0E0]'
               }`}
             >
               {heading.text}
