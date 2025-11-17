@@ -9,11 +9,17 @@ export function urlFor(source: Parameters<typeof builder.image>[0]) {
   return builder.image(source);
 }
 
+// PortableText block content type
+export type PortableTextBlock = {
+  _type: string;
+  [key: string]: unknown;
+};
+
 export interface Topic {
   id: string;
   title: string;
   slug: string;
-  content?: any; // PortableText content from Sanity
+  content?: PortableTextBlock[]; // PortableText content from Sanity
   duration?: string;
   videoUrl?: string;
   image?: string;
@@ -88,7 +94,7 @@ export async function getSections(): Promise<Section[]> {
     slug: section.slug,
     description: section.description,
     order: section.order,
-    topics: (section.topics || []).map((topic: any) => ({
+    topics: (section.topics || []).map((topic: SanityDocument) => ({
       id: topic._id,
       title: topic.title,
       slug: topic.slug,
@@ -216,7 +222,7 @@ export async function getSectionBySlug(slug: string): Promise<Section | undefine
     slug: section.slug,
     description: section.description,
     order: section.order,
-    topics: (section.topics || []).map((topic: any) => ({
+    topics: (section.topics || []).map((topic: SanityDocument) => ({
       id: topic._id,
       title: topic.title,
       slug: topic.slug,
@@ -275,14 +281,3 @@ export async function getPreviousTopic(
   return null;
 }
 
-// Legacy export for backwards compatibility (will be removed once fully migrated)
-export const documentationContent = {
-  id: 'research-documentation',
-  title: 'Research Documentation',
-  description:
-    'Comprehensive documentation of our O-RAN AI research project, including methodologies, findings, and technical details.',
-  modules: 4,
-  lessons: 16,
-  duration: 'Ongoing',
-  sections: [],
-};
