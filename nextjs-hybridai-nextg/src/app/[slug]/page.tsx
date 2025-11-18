@@ -5,6 +5,7 @@ import { PortableText } from "@portabletext/react";
 import { type SanityDocument } from "next-sanity";
 import { client } from "@/sanity/client";
 import imageUrlBuilder from '@sanity/image-url';
+import CodeBlock from '@/components/CodeBlock';
 
 // Create the image URL builder
 const builder = imageUrlBuilder(client);
@@ -158,6 +159,7 @@ export default async function BlogPost({
                       )}
                     </div>
                   ),
+                  code: ({ value }) => <CodeBlock value={value} />,
                 },
                 marks: {
                 link: ({ children, value }) => (

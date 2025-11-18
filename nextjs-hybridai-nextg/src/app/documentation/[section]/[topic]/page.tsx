@@ -13,6 +13,7 @@ import Image from 'next/image';
 import { PortableText } from '@portabletext/react';
 import imageUrlBuilder from '@sanity/image-url';
 import { client } from '@/sanity/client';
+import CodeBlock from '@/components/CodeBlock';
 
 const builder = imageUrlBuilder(client);
 
@@ -88,7 +89,7 @@ export default async function TopicPage({ params }: TopicPageProps) {
           {/* Topic Content */}
           <div
             id="topic-content"
-            className="prose prose-lg max-w-none mb-12 prose-gray dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-strong:text-gray-900 dark:prose-strong:text-white"
+            className="prose prose-lg max-w-none mb-12 prose-gray dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-strong:text-gray-900 dark:prose-strong:text-white prose-li:text-gray-700 dark:prose-li:text-gray-300 text-gray-700 dark:text-gray-300"
           >
             {topic.content ? (
               <PortableText
@@ -111,6 +112,7 @@ export default async function TopicPage({ params }: TopicPageProps) {
                         )}
                       </div>
                     ),
+                    code: ({ value }) => <CodeBlock value={value} />,
                   },
                   marks: {
                     link: ({ children, value }) => (
@@ -125,6 +127,11 @@ export default async function TopicPage({ params }: TopicPageProps) {
                     ),
                   },
                   block: {
+                    normal: ({ children }) => (
+                      <p className="text-gray-700 dark:text-gray-300 mb-4">
+                        {children}
+                      </p>
+                    ),
                     h2: ({ children }) => (
                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-8 mb-4" id={String(children).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}>
                         {children}
