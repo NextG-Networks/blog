@@ -143,6 +143,26 @@ export default async function TopicPage({ params }: TopicPageProps) {
                       </h3>
                     ),
                   },
+                  list: {
+                    bullet: ({ children }) => (
+                      <ul className="list-disc space-y-2 my-4 text-gray-700 dark:text-gray-300 pl-6 ml-4">
+                        {children}
+                      </ul>
+                    ),
+                    number: ({ children }) => (
+                      <ol className="list-decimal space-y-2 my-4 text-gray-700 dark:text-gray-300 pl-6 ml-4">
+                        {children}
+                      </ol>
+                    ),
+                  },
+                  listItem: {
+                    bullet: ({ children }) => (
+                      <li className="text-gray-700 dark:text-gray-300 pl-2">{children}</li>
+                    ),
+                    number: ({ children }) => (
+                      <li className="text-gray-700 dark:text-gray-300 pl-2">{children}</li>
+                    ),
+                  },
                 }}
               />
             ) : (
