@@ -17,46 +17,74 @@ export default function OnThisPage({ contentId = 'topic-content' }: OnThisPagePr
   const [activeId, setActiveId] = useState<string>('');
 
   useEffect(() => {
-    // Extract headings from the content
-    const contentElement = document.getElementById(contentId);
-    if (!contentElement) return;
+    // Wait a bit for content to be rendered
+    const extractHeadings = () => {
+      // Extract headings from the content
+      const contentElement = document.getElementById(contentId);
+      if (!contentElement) return null;
 
-    const headingElements = contentElement.querySelectorAll('h2, h3');
-    const extractedHeadings: Heading[] = Array.from(headingElements).map(
-      (heading, index) => {
-        const id = heading.id || `heading-${index}`;
-        if (!heading.id) {
-          heading.id = id;
+      const headingElements = contentElement.querySelectorAll('h2, h3');
+      const extractedHeadings: Heading[] = Array.from(headingElements).map(
+        (heading, index) => {
+          // Get or create ID
+          let id = heading.id;
+          if (!id || id === '') {
+            // Generate ID from text content
+            const text = heading.textContent || '';
+            id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `heading-${index}`;
+            heading.id = id;
+          }
+          return {
+            id,
+            text: heading.textContent || '',
+            level: parseInt(heading.tagName.charAt(1)),
+          };
         }
-        return {
-          id,
-          text: heading.textContent || '',
-          level: parseInt(heading.tagName.charAt(1)),
-        };
-      }
-    );
+      );
 
-    setHeadings(extractedHeadings);
+      setHeadings(extractedHeadings);
+      return headingElements;
+    };
 
     // Set up intersection observer for active heading
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveId(entry.target.id);
-          }
-        });
-      },
-      {
-        rootMargin: '-20% 0px -70% 0px',
-        threshold: 0,
-      }
-    );
+    const setupObserver = (headingElements: NodeListOf<Element> | null) => {
+      if (!headingElements || headingElements.length === 0) return null;
 
-    headingElements.forEach((heading) => observer.observe(heading));
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setActiveId(entry.target.id);
+            }
+          });
+        },
+        {
+          rootMargin: '-20% 0px -70% 0px',
+          threshold: 0,
+        }
+      );
+
+      headingElements.forEach((heading) => observer.observe(heading));
+
+      return () => {
+        observer.disconnect();
+      };
+    };
+
+    // Try immediately
+    const headingElements = extractHeadings();
+    let observerCleanup = setupObserver(headingElements);
+
+    // Also try after a short delay to catch dynamically rendered content
+    const timeout = setTimeout(() => {
+      const newHeadingElements = extractHeadings();
+      if (observerCleanup) observerCleanup();
+      observerCleanup = setupObserver(newHeadingElements);
+    }, 100);
 
     return () => {
-      observer.disconnect();
+      clearTimeout(timeout);
+      if (observerCleanup) observerCleanup();
     };
   }, [contentId]);
 
@@ -66,7 +94,26 @@ export default function OnThisPage({ contentId = 'topic-content' }: OnThisPagePr
 
   const scrollToHeading = (id: string) => {
     const element = document.getElementById(id);
-    if (element) {
+    if (!element) return;
+
+    // Find the scrollable container (the main element with overflow-y-auto)
+    const scrollContainer = element.closest('main') || document.documentElement;
+    const isMainContainer = scrollContainer.tagName === 'MAIN';
+
+    if (isMainContainer) {
+      // Scroll within the main container
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      const offset = 20; // Small offset from top
+      const scrollTop = scrollContainer.scrollTop;
+      const targetPosition = elementRect.top - containerRect.top + scrollTop - offset;
+
+      scrollContainer.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth',
+      });
+    } else {
+      // Fallback to window scroll
       const offset = 100; // Account for sticky header
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - offset;

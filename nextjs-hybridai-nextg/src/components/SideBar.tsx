@@ -59,7 +59,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const [expandedSections, setExpandedSections] = useState<Set<number>>(
-    new Set([0, 1, 2]) // All sections expanded by default
+    new Set([0, 1, 2, 3, 4]) // All sections expanded by default
   );
   // Check if we're on a documentation page
   const isDocumentationPage = pathname?.startsWith('/documentation');

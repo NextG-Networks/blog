@@ -25,6 +25,11 @@ export interface Topic {
   videoUrl?: string;
   image?: string;
   imageAlt?: string;
+  imageDimensions?: {
+    width: number;
+    height: number;
+    aspectRatio: number;
+  };
   order: number;
   section?: {
     slug: string;
@@ -73,7 +78,14 @@ export async function getSections(): Promise<Section[]> {
         heroImage {
           asset-> {
             _id,
-            url
+            url,
+            metadata {
+              dimensions {
+                width,
+                height,
+                aspectRatio
+              }
+            }
           },
           alt
         },
@@ -103,7 +115,14 @@ export async function getSections(): Promise<Section[]> {
       duration: topic.duration,
       videoUrl: topic.videoUrl,
       image: topic.heroImage?.asset?.url
-        ? urlFor(topic.heroImage).width(1200).height(600).url()
+        ? urlFor(topic.heroImage).width(1200).url()
+        : undefined,
+      imageDimensions: topic.heroImage?.asset?.metadata?.dimensions
+        ? {
+            width: topic.heroImage.asset.metadata.dimensions.width,
+            height: topic.heroImage.asset.metadata.dimensions.height,
+            aspectRatio: topic.heroImage.asset.metadata.dimensions.aspectRatio,
+          }
         : undefined,
       imageAlt: topic.imageAlt || topic.heroImage?.alt,
       order: topic.order,
@@ -151,7 +170,22 @@ export async function getTopicBySlug(
         alt
       },
       "imageAlt": heroImage.alt,
-      content,
+      content[]{
+        ...,
+        _type == "image" => {
+          ...,
+          asset->{
+            ...,
+            metadata {
+              dimensions {
+                width,
+                height,
+                aspectRatio
+              }
+            }
+          }
+        }
+      },
       "section": section-> {
         "slug": slug.current,
         title
@@ -170,9 +204,9 @@ export async function getTopicBySlug(
     content: topic.content,
     duration: topic.duration,
     videoUrl: topic.videoUrl,
-    image: topic.heroImage?.asset?.url
-      ? urlFor(topic.heroImage).width(1200).height(600).url()
-      : undefined,
+      image: topic.heroImage?.asset?.url
+        ? urlFor(topic.heroImage).width(1200).url()
+        : undefined,
     imageAlt: topic.imageAlt || topic.heroImage?.alt,
     order: topic.order,
     section: topic.section,
@@ -199,12 +233,34 @@ export async function getSectionBySlug(slug: string): Promise<Section | undefine
         heroImage {
           asset-> {
             _id,
-            url
+            url,
+            metadata {
+              dimensions {
+                width,
+                height,
+                aspectRatio
+              }
+            }
           },
           alt
         },
         "imageAlt": heroImage.alt,
-        content,
+        content[]{
+          ...,
+          _type == "image" => {
+            ...,
+            asset->{
+              ...,
+              metadata {
+                dimensions {
+                  width,
+                  height,
+                  aspectRatio
+                }
+              }
+            }
+          }
+        },
         "section": section-> {
           "slug": slug.current,
           title
@@ -231,7 +287,14 @@ export async function getSectionBySlug(slug: string): Promise<Section | undefine
       duration: topic.duration,
       videoUrl: topic.videoUrl,
       image: topic.heroImage?.asset?.url
-        ? urlFor(topic.heroImage).width(1200).height(600).url()
+        ? urlFor(topic.heroImage).width(1200).url()
+        : undefined,
+      imageDimensions: topic.heroImage?.asset?.metadata?.dimensions
+        ? {
+            width: topic.heroImage.asset.metadata.dimensions.width,
+            height: topic.heroImage.asset.metadata.dimensions.height,
+            aspectRatio: topic.heroImage.asset.metadata.dimensions.aspectRatio,
+          }
         : undefined,
       imageAlt: topic.imageAlt || topic.heroImage?.alt,
       order: topic.order,

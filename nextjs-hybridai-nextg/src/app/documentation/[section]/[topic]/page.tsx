@@ -67,14 +67,25 @@ export default async function TopicPage({ params }: TopicPageProps) {
             </h1>
             
             {topic.image && (
-              <div className="relative w-full h-96 mb-6 rounded-lg overflow-hidden">
-                <Image
-                  src={topic.image}
-                  alt={topic.imageAlt || topic.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
+              <div className="relative w-full mb-6 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900">
+                <div 
+                  className="relative w-full rounded-lg overflow-hidden"
+                  style={{
+                    aspectRatio: topic.imageDimensions?.aspectRatio 
+                      ? `${topic.imageDimensions.aspectRatio}` 
+                      : '16/9',
+                    maxHeight: '800px'
+                  }}
+                >
+                  <Image
+                    src={topic.image}
+                    alt={topic.imageAlt || topic.title}
+                    fill
+                    className="object-contain rounded-lg"
+                    priority
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                  />
+                </div>
               </div>
             )}
 
@@ -96,22 +107,56 @@ export default async function TopicPage({ params }: TopicPageProps) {
                 value={topic.content}
                 components={{
                   types: {
-                    image: ({ value }) => (
-                      <div className="my-8">
-                        <Image
-                          src={urlFor(value).width(800).height(400).url()}
-                          alt={value.alt || ''}
-                          width={800}
-                          height={400}
-                          className="w-full h-auto rounded-lg shadow-md"
-                        />
-                        {value.caption && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center italic">
-                            {value.caption}
-                          </p>
-                        )}
-                      </div>
-                    ),
+                    image: ({ value }) => {
+                      if (!value?.asset) {
+                        return null;
+                      }
+                      
+                      // Get image dimensions from Sanity metadata
+                      // Asset can be either a reference (_ref) or an expanded object with metadata
+                      const asset = value.asset;
+                      const dimensions = asset?.metadata?.dimensions;
+                      const aspectRatio = dimensions?.aspectRatio || 16/9;
+                      const maxHeight = 500;
+                      const maxWidth = 800; // Constrain width as well
+                      
+                      // Calculate actual dimensions respecting both constraints
+                      let width = maxHeight * aspectRatio;
+                      let height = maxHeight;
+                      
+                      // If calculated width exceeds maxWidth, scale down
+                      if (width > maxWidth) {
+                        width = maxWidth;
+                        height = maxWidth / aspectRatio;
+                      }
+                      
+                      return (
+                        <div className="my-8">
+                          <div 
+                            className="relative rounded-lg overflow-hidden shadow-md bg-gray-50 dark:bg-gray-900 mx-auto"
+                            style={{
+                              width: `${width}px`,
+                              height: `${height}px`,
+                              maxWidth: '100%',
+                              aspectRatio: `${aspectRatio}`
+                            }}
+                          >
+                            <Image
+                              src={urlFor(value).width(1200).url()}
+                              alt={value.alt || ''}
+                              fill
+                              className="object-contain rounded-lg"
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                            />
+                          </div>
+                          {value.caption && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center italic">
+                              {value.caption}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    },
                     code: ({ value }) => <CodeBlock value={value} />,
                   },
                   marks: {
@@ -132,16 +177,46 @@ export default async function TopicPage({ params }: TopicPageProps) {
                         {children}
                       </p>
                     ),
-                    h2: ({ children }) => (
-                      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-8 mb-4" id={String(children).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}>
-                        {children}
-                      </h2>
-                    ),
-                    h3: ({ children }) => (
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mt-6 mb-3" id={String(children).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}>
-                        {children}
-                      </h3>
-                    ),
+                    h2: ({ children }) => {
+                      // Extract text content from PortableText children
+                      const getTextContent = (node: React.ReactNode): string => {
+                        if (typeof node === 'string') return node;
+                        if (typeof node === 'number') return String(node);
+                        if (Array.isArray(node)) return node.map(getTextContent).join('');
+                        if (node && typeof node === 'object' && 'props' in node) {
+                          const props = node.props as { children?: React.ReactNode };
+                          return getTextContent(props.children);
+                        }
+                        return '';
+                      };
+                      const text = getTextContent(children);
+                      const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                      return (
+                        <h2 id={id} className="text-2xl font-bold text-gray-900 dark:text-white mt-8 mb-4">
+                          {children}
+                        </h2>
+                      );
+                    },
+                    h3: ({ children }) => {
+                      // Extract text content from PortableText children
+                      const getTextContent = (node: React.ReactNode): string => {
+                        if (typeof node === 'string') return node;
+                        if (typeof node === 'number') return String(node);
+                        if (Array.isArray(node)) return node.map(getTextContent).join('');
+                        if (node && typeof node === 'object' && 'props' in node) {
+                          const props = node.props as { children?: React.ReactNode };
+                          return getTextContent(props.children);
+                        }
+                        return '';
+                      };
+                      const text = getTextContent(children);
+                      const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                      return (
+                        <h3 id={id} className="text-xl font-semibold text-gray-900 dark:text-white mt-6 mb-3">
+                          {children}
+                        </h3>
+                      );
+                    },
                   },
                   list: {
                     bullet: ({ children }) => (
